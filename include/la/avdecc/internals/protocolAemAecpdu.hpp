@@ -73,11 +73,13 @@ public:
 
 	// Setters
 	LA_AVDECC_API void LA_AVDECC_CALL_CONVENTION setUnsolicited(bool const unsolicited) noexcept;
+	LA_AVDECC_API void LA_AVDECC_CALL_CONVENTION setControllerRequest(bool const controllerRequest) noexcept;
 	LA_AVDECC_API void LA_AVDECC_CALL_CONVENTION setCommandType(AemCommandType const commandType) noexcept;
 	LA_AVDECC_API void LA_AVDECC_CALL_CONVENTION setCommandSpecificData(void const* const commandSpecificData, size_t const commandSpecificDataLength);
 
 	// Getters
 	LA_AVDECC_API bool LA_AVDECC_CALL_CONVENTION getUnsolicited() const noexcept;
+	LA_AVDECC_API bool LA_AVDECC_CALL_CONVENTION getControllerRequest() const noexcept;
 	LA_AVDECC_API AemCommandType LA_AVDECC_CALL_CONVENTION getCommandType() const noexcept;
 	LA_AVDECC_API Payload LA_AVDECC_CALL_CONVENTION getPayload() const noexcept;
 
@@ -105,6 +107,7 @@ private:
 
 	// Aem header data
 	bool _unsolicited{ false };
+	bool _controllerRequest{ false };
 	AemCommandType _commandType{ AemCommandType::InvalidCommandType };
 	std::array<std::uint8_t, MaximumPayloadBufferLength> _commandSpecificData{};
 	size_t _commandSpecificDataLength{ 0u };
