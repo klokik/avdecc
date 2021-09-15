@@ -369,6 +369,8 @@ public:
 	virtual void onClockDomainNameChanged(la::avdecc::entity::controller::Interface const* const /*controller*/, la::avdecc::UniqueIdentifier const /*entityID*/, la::avdecc::entity::model::ConfigurationIndex const /*configurationIndex*/, la::avdecc::entity::model::ClockDomainIndex const /*clockDomainIndex*/, la::avdecc::entity::model::AvdeccFixedString const& /*clockDomainName*/) noexcept {}
 	/** Called when then associationID was changed by another controller. */
 	virtual void onAssociationIDChanged(la::avdecc::entity::controller::Interface const* const /*controller*/, la::avdecc::UniqueIdentifier const /*entityID*/, la::avdecc::UniqueIdentifier const /*associationID*/) noexcept {}
+	/** Called when entity wants controller to change AudioUnit sampling rate. */
+	virtual void onAudioUnitSamplingRateChange(la::avdecc::entity::controller::Interface const* const /*controller*/, la::avdecc::UniqueIdentifier const /*entityID*/, la::avdecc::entity::model::AudioUnitIndex const /*audioUnitIndex*/, la::avdecc::entity::model::SamplingRate const /*samplingRate*/) noexcept {}
 	/** Called when an AudioUnit sampling rate was changed by another controller. */
 	virtual void onAudioUnitSamplingRateChanged(la::avdecc::entity::controller::Interface const* const /*controller*/, la::avdecc::UniqueIdentifier const /*entityID*/, la::avdecc::entity::model::AudioUnitIndex const /*audioUnitIndex*/, la::avdecc::entity::model::SamplingRate const /*samplingRate*/) noexcept {}
 	/** Called when a VideoCluster sampling rate was changed by another controller. */
