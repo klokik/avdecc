@@ -2815,10 +2815,8 @@ void CapabilityDelegate::processAemAecpResponse(protocol::AemCommandType const c
 					answerCallback.invoke<controller::Interface::SetAudioUnitSamplingRateHandler>(protocolViolationCallback, controllerInterface, targetID, status, descriptorIndex, samplingRate);
 					if (aem.getUnsolicited() && delegate && !!status)
 					{
-						if (aem.getControllerRequest())
-							utils::invokeProtectedMethod(&controller::Delegate::onAudioUnitSamplingRateChange, delegate, controllerInterface, targetID, descriptorIndex, samplingRate);
-						else
-							utils::invokeProtectedMethod(&controller::Delegate::onAudioUnitSamplingRateChanged, delegate, controllerInterface, targetID, descriptorIndex, samplingRate);
+						auto method = (aem.getControllerRequest() ? &controller::Delegate::onAudioUnitSamplingRateChange : &controller::Delegate::onAudioUnitSamplingRateChanged);
+						utils::invokeProtectedMethod(method, delegate, controllerInterface, targetID, descriptorIndex, samplingRate);
 					}
 				}
 				else if (descriptorType == model::DescriptorType::VideoCluster)
