@@ -2291,7 +2291,8 @@ void CapabilityDelegate::processAemAecpResponse(protocol::AemCommandType const c
 				answerCallback.invoke<controller::Interface::SetConfigurationHandler>(protocolViolationCallback, controllerInterface, targetID, status, configurationIndex);
 				if (aem.getUnsolicited() && delegate && !!status)
 				{
-					utils::invokeProtectedMethod(&controller::Delegate::onConfigurationChanged, delegate, controllerInterface, targetID, configurationIndex);
+					auto method = (aem.getControllerRequest() ? &controller::Delegate::onConfigurationChange : &controller::Delegate::onConfigurationChanged);
+					utils::invokeProtectedMethod(method, delegate, controllerInterface, targetID, configurationIndex);
 				}
 			}
 		},

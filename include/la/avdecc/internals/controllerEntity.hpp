@@ -329,6 +329,8 @@ public:
 	virtual void onEntityLocked(la::avdecc::entity::controller::Interface const* const /*controller*/, la::avdecc::UniqueIdentifier const /*entityID*/, la::avdecc::UniqueIdentifier const /*lockingEntity*/, la::avdecc::entity::model::DescriptorType const /*descriptorType*/, la::avdecc::entity::model::DescriptorIndex const /*descriptorIndex*/) noexcept {}
 	/** Called when an entity has been unlocked by another controller (or because of the lock timeout). */
 	virtual void onEntityUnlocked(la::avdecc::entity::controller::Interface const* const /*controller*/, la::avdecc::UniqueIdentifier const /*entityID*/, la::avdecc::UniqueIdentifier const /*lockingEntity*/, la::avdecc::entity::model::DescriptorType const /*descriptorType*/, la::avdecc::entity::model::DescriptorIndex const /*descriptorIndex*/) noexcept {}
+	/** Called when entity wants controller to change Configuration. */
+	virtual void onConfigurationChange(la::avdecc::entity::controller::Interface const* const /*controller*/, la::avdecc::UniqueIdentifier const /*entityID*/, la::avdecc::entity::model::ConfigurationIndex const /*configurationIndex*/) noexcept {}
 	/** Called when the current configuration was changed by another controller. */
 	virtual void onConfigurationChanged(la::avdecc::entity::controller::Interface const* const /*controller*/, la::avdecc::UniqueIdentifier const /*entityID*/, la::avdecc::entity::model::ConfigurationIndex const /*configurationIndex*/) noexcept {}
 	/** Called when the format of an input stream was changed by another controller. */
