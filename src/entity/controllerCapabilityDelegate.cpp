@@ -2906,7 +2906,8 @@ void CapabilityDelegate::processAemAecpResponse(protocol::AemCommandType const c
 				answerCallback.invoke<controller::Interface::SetClockSourceHandler>(protocolViolationCallback, controllerInterface, targetID, status, descriptorIndex, clockSourceIndex);
 				if (aem.getUnsolicited() && delegate && !!status)
 				{
-					utils::invokeProtectedMethod(&controller::Delegate::onClockSourceChanged, delegate, controllerInterface, targetID, descriptorIndex, clockSourceIndex);
+					auto method = (aem.getControllerRequest() ? &controller::Delegate::onClockSourceChange : &controller::Delegate::onClockSourceChanged);
+					utils::invokeProtectedMethod(method, delegate, controllerInterface, targetID, descriptorIndex, clockSourceIndex);
 				}
 			}
 		},
