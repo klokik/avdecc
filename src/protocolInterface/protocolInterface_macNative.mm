@@ -839,6 +839,7 @@ ProtocolInterfaceMacNative* ProtocolInterfaceMacNative::createRawProtocolInterfa
 
 	// Set AEM fields
 	aem.setUnsolicited(message.isUnsolicited);
+	aem.setControllerRequest(message.isControllerRequest);
 	aem.setCommandType(la::avdecc::protocol::AemCommandType{ message.commandType });
 	if (message.commandSpecificData.length != 0)
 	{
