@@ -37,7 +37,7 @@ namespace avdecc
 class EndStationImpl final : public EndStation
 {
 public:
-	EndStationImpl(ExecutorManager::ExecutorWrapper::UniquePointer&& executorWrapper, protocol::ProtocolInterface::UniquePointer&& protocolInterface) noexcept;
+	EndStationImpl(ExecutorManager::ExecutorWrapper::SharedPointer& executorWrapper, protocol::ProtocolInterface::UniquePointer&& protocolInterface) noexcept;
 	~EndStationImpl() noexcept;
 
 	// EndStation overrides
@@ -48,7 +48,7 @@ public:
 	virtual void destroy() noexcept override;
 
 private:
-	ExecutorManager::ExecutorWrapper::UniquePointer _executorWrapper{ nullptr, nullptr };
+	ExecutorManager::ExecutorWrapper::SharedPointer _executorWrapper{ nullptr };
 	protocol::ProtocolInterface::UniquePointer const _protocolInterface{ nullptr, nullptr };
 	std::vector<entity::Entity::UniquePointer> _entities{};
 };

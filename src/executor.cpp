@@ -302,7 +302,8 @@ public:
 
 	// ExecutorManager overrides
 	virtual bool isExecutorRegistered(std::string const& name) const noexcept override;
-	virtual ExecutorWrapper::UniquePointer registerExecutor(std::string const& name, Executor::UniquePointer&& executor) override;
+	virtual ExecutorWrapper::SharedPointer registerExecutor(std::string const& name, Executor::UniquePointer&& executor) override;
+	virtual ExecutorWrapper::SharedPointer getExecutor(std::string const& name) override;
 	virtual bool destroyExecutor(std::string const& name) noexcept override;
 	virtual void pushJob(std::string const& name, Executor::Job&& job) noexcept override;
 	virtual void flush(std::string const& name) noexcept override;
@@ -315,9 +316,14 @@ public:
 	ExecutorManagerImpl& operator=(ExecutorManagerImpl&&) = delete;
 
 private:
+	struct ExecutorEntry
+	{
+		Executor::UniquePointer executor;
+		ExecutorWrapper::SharedPointer::weak_type wrapper;
+	};
 	// Private members
-	mutable std::mutex _lock{};
-	std::unordered_map<std::string, Executor::UniquePointer> _executors{};
+	mutable std::recursive_mutex _lock{};
+	std::unordered_map<std::string, ExecutorEntry> _executors{};
 };
 
 class ExecutorWrapperImpl final : public ExecutorManager::ExecutorWrapper
@@ -385,10 +391,10 @@ bool ExecutorManagerImpl::isExecutorRegistered(std::string const& name) const no
 	return _executors.find(name) != _executors.end();
 }
 
-ExecutorManager::ExecutorWrapper::UniquePointer ExecutorManagerImpl::registerExecutor(std::string const& name, Executor::UniquePointer&& executor)
+ExecutorManager::ExecutorWrapper::SharedPointer ExecutorManagerImpl::registerExecutor(std::string const& name, Executor::UniquePointer&& executor)
 {
 	auto const lg = std::lock_guard(_lock);
-	auto const result = _executors.try_emplace(name, std::move(executor));
+	auto const result = _executors.try_emplace(name, ExecutorEntry{ .executor=std::move(executor), .wrapper={}});
 	// If the insertion failed, throw an exception
 	if (!result.second)
 	{
@@ -399,7 +405,19 @@ ExecutorManager::ExecutorWrapper::UniquePointer ExecutorManagerImpl::registerExe
 	{
 		delete static_cast<ExecutorWrapperImpl*>(self);
 	};
-	return ExecutorWrapper::UniquePointer(new ExecutorWrapperImpl{ result.first->second.get(), name, this }, deleter);
+	auto ptr = ExecutorWrapper::SharedPointer(new ExecutorWrapperImpl{ result.first->second.executor.get(), name, this }, deleter);
+	result.first->second.wrapper = ptr;
+
+	return ptr;
+}
+
+ExecutorManager::ExecutorWrapper::SharedPointer ExecutorManagerImpl::getExecutor(std::string const& name)
+{
+	auto const lg = std::lock_guard(_lock);
+	if (auto const it = _executors.find(name); it != _executors.end())
+		return it->second.wrapper.lock();
+
+	return nullptr;
 }
 
 bool ExecutorManagerImpl::destroyExecutor(std::string const& name) noexcept
@@ -419,7 +437,7 @@ void ExecutorManagerImpl::pushJob(std::string const& name, Executor::Job&& job) 
 	auto const lg = std::lock_guard(_lock);
 	if (auto const it = _executors.find(name); it != _executors.end())
 	{
-		it->second->pushJob(std::move(job));
+		it->second.executor->pushJob(std::move(job));
 	}
 }
 
@@ -428,7 +446,7 @@ void ExecutorManagerImpl::flush(std::string const& name) noexcept
 	auto const lg = std::lock_guard(_lock);
 	if (auto const it = _executors.find(name); it != _executors.end())
 	{
-		it->second->flush();
+		it->second.executor->flush();
 	}
 }
 
@@ -437,7 +455,7 @@ std::thread::id ExecutorManagerImpl::getExecutorThread(std::string const& name) 
 	auto const lg = std::lock_guard(_lock);
 	if (auto const it = _executors.find(name); it != _executors.end())
 	{
-		return it->second->getExecutorThread();
+		return it->second.executor->getExecutorThread();
 	}
 	return {};
 }

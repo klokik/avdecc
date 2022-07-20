@@ -166,6 +166,7 @@ public:
 	{
 	public:
 		using UniquePointer = std::unique_ptr<ExecutorWrapper, void (*)(ExecutorWrapper*)>;
+		using SharedPointer = std::shared_ptr<ExecutorWrapper>;
 
 		/** Returns true if the wrapper contains a valid Executor */
 		virtual explicit operator bool() const noexcept = 0;
@@ -197,7 +198,10 @@ public:
 	virtual bool isExecutorRegistered(std::string const& name) const noexcept = 0;
 
 	/** Register a new Executor with the givent name. Throws a std::runtime_error if an Executor with that name already exists. */
-	virtual ExecutorWrapper::UniquePointer registerExecutor(std::string const& name, Executor::UniquePointer&& executor) = 0;
+	virtual ExecutorWrapper::SharedPointer registerExecutor(std::string const& name, Executor::UniquePointer&& executor) = 0;
+
+	/** Get Executor with the givent name. */
+	virtual ExecutorWrapper::SharedPointer getExecutor(std::string const& name) = 0;
 
 	/** Destroy an Executor with a given name. Returns true if the Executor was destroyed, false if it didn't exist. */
 	virtual bool destroyExecutor(std::string const& name) noexcept = 0;

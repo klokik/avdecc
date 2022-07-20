@@ -34,8 +34,8 @@ namespace la
 {
 namespace avdecc
 {
-EndStationImpl::EndStationImpl(ExecutorManager::ExecutorWrapper::UniquePointer&& executorWrapper, protocol::ProtocolInterface::UniquePointer&& protocolInterface) noexcept
-	: _executorWrapper{ std::move(executorWrapper) }
+EndStationImpl::EndStationImpl(ExecutorManager::ExecutorWrapper::SharedPointer& executorWrapper, protocol::ProtocolInterface::UniquePointer&& protocolInterface) noexcept
+	: _executorWrapper{ executorWrapper }
 	, _protocolInterface{ std::move(protocolInterface) }
 {
 }
@@ -131,8 +131,13 @@ EndStation* LA_AVDECC_CALL_CONVENTION EndStation::createRawEndStation(protocol::
 	try
 	{
 		// We must create the executor before creating ProtocolInterface (function parameters sequencing is still undefined in c++20, so we force creation in a preceding expression)
-		auto executorWrapper = ExecutorManager::getInstance().registerExecutor(protocol::ProtocolInterface::DefaultExecutorName, ExecutorWithDispatchQueue::create(protocol::ProtocolInterface::DefaultExecutorName, utils::ThreadPriority::Highest));
-		return new EndStationImpl(std::move(executorWrapper), protocol::ProtocolInterface::create(protocolInterfaceType, networkInterfaceName));
+		auto const executorName = protocol::ProtocolInterface::DefaultExecutorName;
+		ExecutorManager::ExecutorWrapper::SharedPointer executorWrapper{};
+		if (ExecutorManager::getInstance().isExecutorRegistered(executorName))
+			executorWrapper = ExecutorManager::getInstance().getExecutor(executorName);
+		else
+			executorWrapper = ExecutorManager::getInstance().registerExecutor(executorName, ExecutorWithDispatchQueue::create(executorName, utils::ThreadPriority::Highest));
+		return new EndStationImpl(executorWrapper, protocol::ProtocolInterface::create(protocolInterfaceType, networkInterfaceName));
 	}
 	catch (protocol::ProtocolInterface::Exception const& e)
 	{
