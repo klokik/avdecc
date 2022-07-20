@@ -304,6 +304,7 @@ public:
 	virtual bool isExecutorRegistered(std::string const& name) const noexcept override;
 	virtual ExecutorWrapper::SharedPointer registerExecutor(std::string const& name, Executor::UniquePointer&& executor) override;
 	virtual ExecutorWrapper::SharedPointer getExecutor(std::string const& name) override;
+	virtual ExecutorWrapper::SharedPointer getOrCreateExecutor(std::string const& name, ExecutorFactoryMethod const& creator) override;
 	virtual bool destroyExecutor(std::string const& name) noexcept override;
 	virtual void pushJob(std::string const& name, Executor::Job&& job) noexcept override;
 	virtual void flush(std::string const& name) noexcept override;
@@ -418,6 +419,15 @@ ExecutorManager::ExecutorWrapper::SharedPointer ExecutorManagerImpl::getExecutor
 		return it->second.wrapper.lock();
 
 	return nullptr;
+}
+
+ExecutorManager::ExecutorWrapper::SharedPointer ExecutorManagerImpl::getOrCreateExecutor(std::string const& name, ExecutorManager::ExecutorFactoryMethod const& creator)
+{
+	auto const lg = std::lock_guard(_lock);
+	if (auto executor = getExecutor(name))
+		return executor;
+	else
+		return registerExecutor(name, creator());
 }
 
 bool ExecutorManagerImpl::destroyExecutor(std::string const& name) noexcept

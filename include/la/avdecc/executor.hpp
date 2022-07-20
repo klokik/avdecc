@@ -203,6 +203,10 @@ public:
 	/** Get Executor with the givent name. */
 	virtual ExecutorWrapper::SharedPointer getExecutor(std::string const& name) = 0;
 
+	using ExecutorFactoryMethod = std::function<Executor::UniquePointer()>;
+	/** Get or create Executor with the givent name. */
+	virtual ExecutorWrapper::SharedPointer getOrCreateExecutor(std::string const& name, ExecutorFactoryMethod const& creator) = 0;
+
 	/** Destroy an Executor with a given name. Returns true if the Executor was destroyed, false if it didn't exist. */
 	virtual bool destroyExecutor(std::string const& name) noexcept = 0;
 

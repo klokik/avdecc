@@ -132,11 +132,8 @@ EndStation* LA_AVDECC_CALL_CONVENTION EndStation::createRawEndStation(protocol::
 	{
 		// We must create the executor before creating ProtocolInterface (function parameters sequencing is still undefined in c++20, so we force creation in a preceding expression)
 		auto const executorName = protocol::ProtocolInterface::DefaultExecutorName;
-		ExecutorManager::ExecutorWrapper::SharedPointer executorWrapper{};
-		if (ExecutorManager::getInstance().isExecutorRegistered(executorName))
-			executorWrapper = ExecutorManager::getInstance().getExecutor(executorName);
-		else
-			executorWrapper = ExecutorManager::getInstance().registerExecutor(executorName, ExecutorWithDispatchQueue::create(executorName, utils::ThreadPriority::Highest));
+		auto const creator = [executorName] { return ExecutorWithDispatchQueue::create(executorName, utils::ThreadPriority::Highest); };
+		auto executorWrapper = ExecutorManager::getInstance().getOrCreateExecutor(executorName, creator);
 		return new EndStationImpl(executorWrapper, protocol::ProtocolInterface::create(protocolInterfaceType, networkInterfaceName));
 	}
 	catch (protocol::ProtocolInterface::Exception const& e)
