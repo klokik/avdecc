@@ -105,10 +105,11 @@ public:
 	ExecutorWithDispatchQueueImpl(std::optional<std::string> const& name = std::nullopt, utils::ThreadPriority const prio = utils::ThreadPriority::Normal) noexcept
 		: ExecutorWithDispatchQueue{}
 	{
-		auto constructionComplete = std::promise<void>{};
+		auto constructionCompletePromise = std::promise<void>{};
+		auto constructionComplete = constructionCompletePromise.get_future();
 
 		_executorThread = std::thread(
-			[this, prio, name, &constructionComplete]
+			[this, prio, name, &constructionCompletePromise]
 			{
 				// Set the name of the thread, if specified
 				if (name.has_value())
@@ -119,7 +120,7 @@ public:
 				utils::setCurrentThreadPriority(prio);
 
 				// Signal that the thread is ready
-				constructionComplete.set_value();
+				constructionCompletePromise.set_value();
 
 				// Run the thread, until termination is requested
 				auto jobsToProcess = std::deque<Job>{};
@@ -172,7 +173,7 @@ public:
 			});
 
 		// Wait for thread running promise
-		constructionComplete.get_future().wait();
+		constructionComplete.wait();
 	}
 
 	virtual ~ExecutorWithDispatchQueueImpl() noexcept
