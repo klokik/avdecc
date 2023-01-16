@@ -59,12 +59,14 @@ public:
 		virtual void onAecpResponseTime(la::avdecc::UniqueIdentifier const& entityID, std::chrono::milliseconds const& responseTime) noexcept = 0;
 	};
 
+	using Clock = std::chrono::steady_clock;
+
 	CommandStateMachine(Manager* manager, Delegate* const delegate) noexcept;
 	~CommandStateMachine() noexcept;
 
 	void registerLocalEntity(entity::LocalEntity& entity) noexcept;
 	void unregisterLocalEntity(entity::LocalEntity& entity) noexcept;
-	void checkInflightCommandsTimeoutExpiracy() noexcept;
+	Clock::time_point checkInflightCommandsTimeoutExpiracy() noexcept;
 	void handleAecpResponse(Aecpdu const& aecpdu) noexcept;
 	void handleAcmpResponse(Acmpdu const& acmpdu) noexcept;
 	ProtocolInterface::Error sendAecpCommand(Aecpdu::UniquePointer&& aecpdu, ProtocolInterface::AecpCommandResultHandler const& onResult) noexcept;

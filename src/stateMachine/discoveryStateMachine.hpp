@@ -58,12 +58,14 @@ public:
 		virtual void onRemoteEntityUpdated(la::avdecc::entity::Entity const& entity) noexcept = 0;
 	};
 
+	using Clock = std::chrono::steady_clock;
+
 	DiscoveryStateMachine(Manager* manager, Delegate* const delegate) noexcept;
 	~DiscoveryStateMachine() noexcept;
 
 	void setDiscoveryDelay(std::chrono::milliseconds const delay = DefaultDiscoverySendDelay) noexcept; // 0 as delay means never send automatic DISCOVER messages
 	void discoverMessageSent() noexcept;
-	void checkRemoteEntitiesTimeoutExpiracy() noexcept;
+	Clock::time_point checkRemoteEntitiesTimeoutExpiracy() noexcept;
 	void checkDiscovery() noexcept;
 	void handleAdpEntityAvailable(Adpdu const& adpdu) noexcept;
 	void handleAdpEntityDeparting(Adpdu const& adpdu) noexcept;

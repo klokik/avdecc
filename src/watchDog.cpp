@@ -41,11 +41,12 @@ namespace watchDog
 class WatchDogImpl final : public WatchDog
 {
 private:
+	using Clock = std::chrono::steady_clock;
 	struct WatchInfo
 	{
 		std::chrono::milliseconds maximumInterval{ 0u };
 		std::thread::id threadId{};
-		std::chrono::time_point<std::chrono::system_clock> lastAlive{ std::chrono::system_clock::now() };
+		std::chrono::time_point<Clock> lastAlive{ Clock::now() };
 		bool ignore{ false };
 	};
 
@@ -59,11 +60,13 @@ public:
 				utils::setCurrentThreadName("avdecc::watchDog");
 				while (!_shouldTerminate)
 				{
+					auto shortestInterval = std::chrono::milliseconds(1000);
+					auto const currentTime = Clock::now();
+
 					// Check all watch
 					{
 						auto const lg = std::lock_guard{ _lock };
 
-						auto const currentTime = std::chrono::system_clock::now();
 						for (auto& [threadId, watchedMap] : _watched)
 						{
 							for (auto& [name, watchInfo] : watchedMap)
@@ -77,7 +80,11 @@ public:
 #endif // _WIN32
 
 								// Check if we timed out
-								if (!watchInfo.ignore && std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - watchInfo.lastAlive).count() > watchInfo.maximumInterval.count())
+								auto const remainingTime = watchInfo.maximumInterval - std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - watchInfo.lastAlive);
+								if (remainingTime > Clock::duration::zero())
+									shortestInterval = std::min(shortestInterval, remainingTime);
+
+								if (!watchInfo.ignore && remainingTime < Clock::duration::zero())
 								{
 									_observers.notifyObserversMethod<Observer>(&Observer::onIntervalExceeded, name, watchInfo.maximumInterval);
 
@@ -90,8 +97,7 @@ public:
 							}
 						}
 					}
-					// Wait a little bit so we don't burn the CPU
-					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+					std::this_thread::sleep_until(currentTime + shortestInterval);
 				}
 			});
 	}
@@ -169,7 +175,7 @@ private:
 			if (auto watchedIt = watchedThread.find(name); AVDECC_ASSERT_WITH_RET(watchedIt != watchedThread.end(), "Cannot alive, 'name' not found"))
 			{
 				watchedIt->second.threadId = thisId;
-				watchedIt->second.lastAlive = std::chrono::system_clock::now();
+				watchedIt->second.lastAlive = Clock::now();
 			}
 		}
 	}
