@@ -128,7 +128,7 @@ public:
 
 #ifdef __linux__
 				// Empty signal handler for when shutdown() wakes up this thread during termination
-				std::signal(SIGTERM, [](int){});
+				std::signal(SIGPOLL, [](int){});
 #endif // __linux__
 
 				_pcapLibrary.loop(pcap, -1, &ProtocolInterfacePcapImpl::pcapLoopHandler, reinterpret_cast<u_char*>(this));
@@ -185,7 +185,7 @@ private:
 			}
 #ifdef __linux__
 			// On linux when using 3PCAP we also have to wake up the thread using a signal (see pcap_breakloop manpage, "multi-threaded application" section)
-			pthread_kill(_captureThread.native_handle(), SIGTERM);
+			pthread_kill(_captureThread.native_handle(), SIGPOLL);
 #endif // __linux__
 			_captureThread.join();
 		}
