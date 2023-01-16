@@ -61,13 +61,14 @@ void DiscoveryStateMachine::discoverMessageSent() noexcept
 	_lastDiscovery = std::chrono::steady_clock::now();
 }
 
-void DiscoveryStateMachine::checkRemoteEntitiesTimeoutExpiracy() noexcept
+DiscoveryStateMachine::Clock::time_point DiscoveryStateMachine::checkRemoteEntitiesTimeoutExpiracy() noexcept
 {
 	// Lock
 	auto const lg = std::lock_guard{ *_manager };
 
 	// Get current time
-	auto const now = std::chrono::steady_clock::now();
+	auto const now = Clock::now();
+	auto nextWakeUpTime = Clock::time_point::max();
 
 	// Process all Discovered Entities on the attached Protocol Interface
 	for (auto discoveredEntityKV = _discoveredEntities.begin(); discoveredEntityKV != _discoveredEntities.end(); /* Iterate inside the loop */)
@@ -88,6 +89,8 @@ void DiscoveryStateMachine::checkRemoteEntitiesTimeoutExpiracy() noexcept
 			}
 			else
 			{
+				if (now != timeout)
+					nextWakeUpTime = std::min(nextWakeUpTime, timeout);
 				++timeoutKV;
 			}
 		}
@@ -120,6 +123,8 @@ void DiscoveryStateMachine::checkRemoteEntitiesTimeoutExpiracy() noexcept
 			++discoveredEntityKV;
 		}
 	}
+
+	return nextWakeUpTime;
 }
 
 void DiscoveryStateMachine::checkDiscovery() noexcept

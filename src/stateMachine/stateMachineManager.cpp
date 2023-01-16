@@ -231,6 +231,8 @@ void Manager::startStateMachines() noexcept
 				auto& watchDog = *watchDogSharedPointer;
 				watchDog.registerWatch("avdecc::StateMachine", std::chrono::milliseconds{ 1000u }, true);
 
+				using Clock = std::chrono::steady_clock;
+				auto nextWakeUpTime = Clock::now() + std::chrono::milliseconds(250);
 				while (!_shouldTerminate)
 				{
 					// Check for local entities announcement
@@ -240,16 +242,17 @@ void Manager::startStateMachines() noexcept
 					_discoveryStateMachine.checkDiscovery();
 
 					// Check for timeout expiracy on all remote entities
-					_discoveryStateMachine.checkRemoteEntitiesTimeoutExpiracy();
+					auto const discoverySMWakeUpTime = _discoveryStateMachine.checkRemoteEntitiesTimeoutExpiracy();
+					nextWakeUpTime = std::min(nextWakeUpTime, discoverySMWakeUpTime);
 
 					// Check for inflight commands expiracy
-					_commandStateMachine.checkInflightCommandsTimeoutExpiracy();
+					auto const commandSMWakeUpTime = _commandStateMachine.checkInflightCommandsTimeoutExpiracy();
+					nextWakeUpTime = std::min(nextWakeUpTime, commandSMWakeUpTime);
 
 					// Try to detect deadlocks
 					watchDog.alive("avdecc::StateMachine", true);
 
-					// Wait a little bit so we don't burn the CPU
-					std::this_thread::sleep_for(std::chrono::milliseconds(5));
+					std::this_thread::sleep_until(nextWakeUpTime);
 				}
 				watchDog.unregisterWatch("avdecc::StateMachine", true);
 			});

@@ -101,13 +101,17 @@ void CommandStateMachine::unregisterLocalEntity(entity::LocalEntity& entity) noe
 	}
 }
 
-void CommandStateMachine::checkInflightCommandsTimeoutExpiracy() noexcept
+CommandStateMachine::Clock::time_point CommandStateMachine::checkInflightCommandsTimeoutExpiracy() noexcept
 {
 	// Lock
 	auto const lg = std::lock_guard{ *_manager };
 
 	// Get current time
-	auto const now = std::chrono::steady_clock::now();
+	auto const now = Clock::now();
+	auto nextWakeUpTime = Clock::time_point::max();
+	auto updateWakeUpTime = [&nextWakeUpTime] (auto suggestedTime) {
+		nextWakeUpTime = std::min(nextWakeUpTime, suggestedTime);
+	};
 
 	auto* const protocolInterface = _manager->getProtocolInterfaceDelegate();
 
@@ -162,6 +166,7 @@ void CommandStateMachine::checkInflightCommandsTimeoutExpiracy() noexcept
 				}
 				else
 				{
+					updateWakeUpTime(command.timeoutTime);
 					++it;
 				}
 			}
@@ -209,6 +214,7 @@ void CommandStateMachine::checkInflightCommandsTimeoutExpiracy() noexcept
 				}
 				else
 				{
+					updateWakeUpTime(command.timeoutTime);
 					++it;
 				}
 			}
@@ -230,6 +236,8 @@ void CommandStateMachine::checkInflightCommandsTimeoutExpiracy() noexcept
 		}
 		localEntityInfo.scheduledAcmpErrors.clear();
 	}
+
+	return nextWakeUpTime;
 }
 
 void CommandStateMachine::handleAecpResponse(Aecpdu const& aecpdu) noexcept
