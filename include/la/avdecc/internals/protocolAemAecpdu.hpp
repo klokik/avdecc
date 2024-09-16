@@ -46,8 +46,8 @@ public:
 	static constexpr size_t MaximumSendPayloadBufferLength = Aecpdu::MaximumSendLength - Aecpdu::HeaderLength - HeaderLength;
 	static constexpr size_t MaximumRecvPayloadBufferLength = Aecpdu::MaximumRecvLength - Aecpdu::HeaderLength - HeaderLength;
 	static_assert(MaximumPayloadBufferLength >= MaximumSendPayloadBufferLength && MaximumPayloadBufferLength >= MaximumRecvPayloadBufferLength, "Incoherent constexpr values");
-	static LA_AVDECC_API la::avdecc::networkInterface::MacAddress const Identify_Mac_Address; /* Annex B */
-	static LA_AVDECC_API la::avdecc::UniqueIdentifier const Identify_ControllerEntityID; /* Clause 7.5.1 */
+	static LA_AVDECC_API networkInterface::MacAddress const Identify_Mac_Address; /* Annex B */
+	static LA_AVDECC_API UniqueIdentifier const Identify_ControllerEntityID; /* Clause 7.5.1 */
 	using Payload = std::pair<void const*, size_t>;
 
 	/**
@@ -73,11 +73,13 @@ public:
 
 	// Setters
 	LA_AVDECC_API void LA_AVDECC_CALL_CONVENTION setUnsolicited(bool const unsolicited) noexcept;
+	LA_AVDECC_API void LA_AVDECC_CALL_CONVENTION setControllerRequest(bool const controllerRequest) noexcept;
 	LA_AVDECC_API void LA_AVDECC_CALL_CONVENTION setCommandType(AemCommandType const commandType) noexcept;
 	LA_AVDECC_API void LA_AVDECC_CALL_CONVENTION setCommandSpecificData(void const* const commandSpecificData, size_t const commandSpecificDataLength);
 
 	// Getters
 	LA_AVDECC_API bool LA_AVDECC_CALL_CONVENTION getUnsolicited() const noexcept;
+	LA_AVDECC_API bool LA_AVDECC_CALL_CONVENTION getControllerRequest() const noexcept;
 	LA_AVDECC_API AemCommandType LA_AVDECC_CALL_CONVENTION getCommandType() const noexcept;
 	LA_AVDECC_API Payload LA_AVDECC_CALL_CONVENTION getPayload() const noexcept;
 
@@ -105,6 +107,7 @@ private:
 
 	// Aem header data
 	bool _unsolicited{ false };
+	bool _controllerRequest{ false };
 	AemCommandType _commandType{ AemCommandType::InvalidCommandType };
 	std::array<std::uint8_t, MaximumPayloadBufferLength> _commandSpecificData{};
 	size_t _commandSpecificDataLength{ 0u };

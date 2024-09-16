@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.2.1] - 2021-12-10
+### Added
+- Possibility to deserialize virtual entities into ControlledEntity without adding them to the controller
+  - `deserializeControlledEntitiesFromJsonNetworkState` for an ANS file
+  - `deserializeControlledEntityFromJson` for an AVE file
+
 ## [3.2.0] - 2021-07-21
 ### Added
 - Support for multiple Virtual Entities loading from FullNetworkState file

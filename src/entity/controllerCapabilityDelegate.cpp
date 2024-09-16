@@ -1836,7 +1836,7 @@ void CapabilityDelegate::sendAemAecpCommand(UniqueIdentifier const targetEntityI
 	}
 
 	// Return an error if entity is not found in the list
-	if (!networkInterface::isMacAddressValid(targetMacAddress))
+	if (!networkInterface::NetworkInterfaceHelper::isMacAddressValid(targetMacAddress))
 	{
 		utils::invokeProtectedHandler(onErrorCallback, LocalEntity::AemCommandStatus::UnknownEntity);
 		return;
@@ -1876,7 +1876,7 @@ void CapabilityDelegate::sendAaAecpCommand(UniqueIdentifier const targetEntityID
 	}
 
 	// Return an error if entity is not found in the list
-	if (!networkInterface::isMacAddressValid(targetMacAddress))
+	if (!networkInterface::NetworkInterfaceHelper::isMacAddressValid(targetMacAddress))
 	{
 		utils::invokeProtectedHandler(onErrorCallback, LocalEntity::AaCommandStatus::UnknownEntity);
 		return;
@@ -1916,7 +1916,7 @@ void CapabilityDelegate::sendMvuAecpCommand(UniqueIdentifier const targetEntityI
 	}
 
 	// Return an error if entity is not found in the list
-	if (!networkInterface::isMacAddressValid(targetMacAddress))
+	if (!networkInterface::NetworkInterfaceHelper::isMacAddressValid(targetMacAddress))
 	{
 		utils::invokeProtectedHandler(onErrorCallback, LocalEntity::MvuCommandStatus::UnknownEntity);
 		return;
@@ -2261,7 +2261,8 @@ void CapabilityDelegate::processAemAecpResponse(protocol::AemCommandType const c
 				answerCallback.invoke<controller::Interface::SetConfigurationHandler>(protocolViolationCallback, controllerInterface, targetID, status, configurationIndex);
 				if (aem.getUnsolicited() && delegate && !!status)
 				{
-					utils::invokeProtectedMethod(&controller::Delegate::onConfigurationChanged, delegate, controllerInterface, targetID, configurationIndex);
+					auto method = (aem.getControllerRequest() ? &controller::Delegate::onConfigurationChange : &controller::Delegate::onConfigurationChanged);
+					utils::invokeProtectedMethod(method, delegate, controllerInterface, targetID, configurationIndex);
 				}
 			}
 		},
@@ -2815,7 +2816,8 @@ void CapabilityDelegate::processAemAecpResponse(protocol::AemCommandType const c
 					answerCallback.invoke<controller::Interface::SetAudioUnitSamplingRateHandler>(protocolViolationCallback, controllerInterface, targetID, status, descriptorIndex, samplingRate);
 					if (aem.getUnsolicited() && delegate && !!status)
 					{
-						utils::invokeProtectedMethod(&controller::Delegate::onAudioUnitSamplingRateChanged, delegate, controllerInterface, targetID, descriptorIndex, samplingRate);
+						auto method = (aem.getControllerRequest() ? &controller::Delegate::onAudioUnitSamplingRateChange : &controller::Delegate::onAudioUnitSamplingRateChanged);
+						utils::invokeProtectedMethod(method, delegate, controllerInterface, targetID, descriptorIndex, samplingRate);
 					}
 				}
 				else if (descriptorType == model::DescriptorType::VideoCluster)
@@ -2873,7 +2875,8 @@ void CapabilityDelegate::processAemAecpResponse(protocol::AemCommandType const c
 				answerCallback.invoke<controller::Interface::SetClockSourceHandler>(protocolViolationCallback, controllerInterface, targetID, status, descriptorIndex, clockSourceIndex);
 				if (aem.getUnsolicited() && delegate && !!status)
 				{
-					utils::invokeProtectedMethod(&controller::Delegate::onClockSourceChanged, delegate, controllerInterface, targetID, descriptorIndex, clockSourceIndex);
+					auto method = (aem.getControllerRequest() ? &controller::Delegate::onClockSourceChange : &controller::Delegate::onClockSourceChanged);
+					utils::invokeProtectedMethod(method, delegate, controllerInterface, targetID, descriptorIndex, clockSourceIndex);
 				}
 			}
 		},

@@ -39,8 +39,8 @@ namespace protocol
 /* AemAecpdu class definition                              */
 /***********************************************************/
 
-la::avdecc::networkInterface::MacAddress const AemAecpdu::Identify_Mac_Address{ { 0x91, 0xe0, 0xf0, 0x01, 0x00, 0x01 } };
-la::avdecc::UniqueIdentifier const AemAecpdu::Identify_ControllerEntityID{ 0x90E0F0FFFE010001 };
+networkInterface::MacAddress const AemAecpdu::Identify_Mac_Address{ { 0x91, 0xe0, 0xf0, 0x01, 0x00, 0x01 } };
+UniqueIdentifier const AemAecpdu::Identify_ControllerEntityID{ 0x90E0F0FFFE010001 };
 
 AemAecpdu::AemAecpdu(bool const isResponse) noexcept
 {
@@ -53,6 +53,11 @@ AemAecpdu::~AemAecpdu() noexcept {}
 void LA_AVDECC_CALL_CONVENTION AemAecpdu::setUnsolicited(bool const unsolicited) noexcept
 {
 	_unsolicited = unsolicited;
+}
+
+void LA_AVDECC_CALL_CONVENTION AemAecpdu::setControllerRequest(bool const controllerRequest) noexcept
+{
+	_controllerRequest = controllerRequest;
 }
 
 void LA_AVDECC_CALL_CONVENTION AemAecpdu::setCommandType(AemCommandType const commandType) noexcept
@@ -83,6 +88,11 @@ bool LA_AVDECC_CALL_CONVENTION AemAecpdu::getUnsolicited() const noexcept
 	return _unsolicited;
 }
 
+bool LA_AVDECC_CALL_CONVENTION AemAecpdu::getControllerRequest() const noexcept
+{
+	return _controllerRequest;
+}
+
 AemCommandType LA_AVDECC_CALL_CONVENTION AemAecpdu::getCommandType() const noexcept
 {
 	return _commandType;
@@ -100,7 +110,7 @@ void LA_AVDECC_CALL_CONVENTION AemAecpdu::serialize(SerializationBuffer& buffer)
 
 	auto const previousSize = buffer.size();
 
-	buffer << static_cast<std::uint16_t>(((_unsolicited << 15) & 0x8000) | (_commandType.getValue() & 0x7fff));
+	buffer << static_cast<std::uint16_t>(((_unsolicited << 15) & 0x8000) | ((_controllerRequest << 14) & 0x4000) | (_commandType.getValue() & 0x3fff));
 
 	auto payloadLength = _commandSpecificDataLength;
 	// Clamp command specific buffer in case ControlDataLength exceeds maximum allowed value
@@ -130,12 +140,13 @@ void LA_AVDECC_CALL_CONVENTION AemAecpdu::deserialize(DeserializationBuffer& buf
 		throw std::invalid_argument("Not enough data to deserialize");
 	}
 
-	std::uint16_t u_ct;
+	std::uint16_t u_cr_ct;
 
-	buffer >> u_ct;
+	buffer >> u_cr_ct;
 
-	_unsolicited = ((u_ct & 0x8000) >> 15) != 0;
-	_commandType = static_cast<AemCommandType>(u_ct & 0x7fff);
+	_unsolicited = ((u_cr_ct & 0x8000) >> 15) != 0;
+	_controllerRequest = ((u_cr_ct & 0x4000) >> 14) != 0;
+	_commandType = static_cast<AemCommandType>(u_cr_ct & 0x3fff);
 
 	// Check is there are less advertised data than the required minimum (we can do it after we (tried) unpacked as it would have thrown in case the buffer was too small)
 	auto constexpr minCDL = HeaderLength + Aecpdu::HeaderLength;
